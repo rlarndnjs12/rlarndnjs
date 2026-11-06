@@ -27,8 +27,10 @@ module.exports=async(req,res)=>{
    const before=structuredClone(user);user.password=await auth.passwordHash(body.password);user.version=crypto.randomBytes(16).toString('hex');if(!await store.compareSet(reset.userKey,before,user))return fail(res,409,'계정이 변경되었습니다. 재설정을 다시 요청해 주세요.');auth.cookie(res,'',0);return res.status(200).json({ok:true})
   }
   const email=typeof body.email==='string'?body.email.trim().toLowerCase():'';
-  if(email.length>254||!/^\S+@[^\s@]+\.[^\s@]+$/.test(email))return fail(res,400,'올바른 이메일 주소를 입력해 주세요.');
-  const key=auth.accountKey(email);
+  if(action!=='login'&&(email.length>254||!/^\S+@[^\s@]+\.[^\s@]+$/.test(email)))return fail(res,400,'올바른 이메일 주소를 입력해 주세요.');
+  const name=typeof body.name==='string'?body.name.trim():'';
+  if(action==='login'&&(!name||name.length>50))return fail(res,400,'가입할 때 입력한 이름을 입력해 주세요.');
+  const key=action==='login'?await store.get(auth.nameKey(name)):auth.accountKey(email);
   if(action==='forgot'){
    if(!process.env.RESEND_API_KEY||!process.env.AUTH_FROM_EMAIL||!process.env.AUTH_PUBLIC_URL)return fail(res,503,'비밀번호 재설정 이메일 서비스를 준비하고 있습니다.');
    if(!await store.limit('reset:'+auth.hash(email),3,3600))return fail(res,429,'이메일 재설정 요청이 많습니다. 1시간 후 다시 시도해 주세요.');
@@ -43,17 +45,17 @@ module.exports=async(req,res)=>{
   }
   if(!['signup','login'].includes(action))return fail(res,400,'올바른 작업을 선택해 주세요.');
   if(typeof body.password!=='string'||body.password.length<8||body.password.length>128)return fail(res,400,'비밀번호는 8~128자로 입력해 주세요.');
-  if(!await store.limit('account:'+auth.hash(email),20,900))return fail(res,429,'시도가 많습니다. 15분 후 다시 로그인해 주세요.');
+  if(!await store.limit('account:'+auth.hash(action==='login'?auth.nameKey(name):email),20,900))return fail(res,429,'시도가 많습니다. 15분 후 다시 로그인해 주세요.');
   if(action==='signup'){
    const name=typeof body.name==='string'?body.name.trim():'';if(!name||name.length>50||body.password!==body.confirmPassword)return fail(res,400,'이름을 입력하고 비밀번호 확인을 맞춰 주세요.');
    const user={name,email,password:await auth.passwordHash(body.password),version:crypto.randomBytes(16).toString('hex'),profile:null};
-   if(!await store.set(key,user,0,true))return fail(res,409,'가입할 수 없는 이메일입니다. 로그인 또는 비밀번호 찾기를 이용해 주세요.');
+   if(!await store.register(key,auth.nameKey(name),user))return fail(res,409,'이미 사용 중인 이름 또는 이메일입니다. 다른 이름·이메일을 사용하거나 로그인해 주세요.');
    return res.status(201).json({ok:true})
   }
-  const user=await store.get(key);
+  const user=key?await store.get(key):null;
   // Run scrypt even for unknown accounts to reduce account timing differences.
   const valid=await auth.verify(body.password,user?.password||'00000000000000000000000000000000:'+ '00'.repeat(64));
-  if(!user||!valid)return fail(res,401,'이메일 또는 비밀번호가 올바르지 않습니다.');
+  if(!user||!valid)return fail(res,401,'이름 또는 비밀번호가 올바르지 않습니다.');
   const raw=crypto.randomBytes(32).toString('hex');await store.set('session:'+auth.hash(raw),{userKey:key,version:user.version},604800);auth.cookie(res,raw,604800);return res.status(200).json({user:auth.publicUser(user)})
  }catch{return fail(res,503,'서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.')}
 };

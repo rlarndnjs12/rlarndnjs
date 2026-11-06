@@ -9,10 +9,14 @@ test('account lifecycle: signup, login, profile, reset, session revocation and s
   assert.equal((await request({...signup,confirmPassword:'different'})).code,400);
   assert.equal((await request(signup)).code,201);
   assert.equal((await request(signup)).code,409);
+  assert.equal((await request({...signup,email:'another@example.com'})).code,409);
+  assert.equal((await request({...signup,name:'다른이름'})).code,409);
+  assert.equal((await request({action:'login',name:'없는이름',password:'secret123'})).code,401);
+  assert.equal((await request({action:'login',email:signup.email,password:'secret123'})).code,400);
   const saved=fs.readFileSync(path.join(temp,'auth.json'),'utf8');assert.ok(!saved.includes('secret123'));
   assert.equal((await request({},'GET')).data.user,null);
-  assert.equal((await request({action:'login',email:signup.email,password:'wrongpass'})).code,401);
-  const login=await request({action:'login',email:signup.email,password:signup.password});assert.equal(login.code,200);assert.match(login.headers['Set-Cookie'],/HttpOnly; SameSite=Lax/);assert.equal(login.data.user.profile,null);assert.ok(!login.data.user.password);
+  assert.equal((await request({action:'login',name:signup.name,password:'wrongpass'})).code,401);
+  const login=await request({action:'login',name:signup.name,password:signup.password});assert.equal(login.code,200);assert.match(login.headers['Set-Cookie'],/HttpOnly; SameSite=Lax/);assert.equal(login.data.user.profile,null);assert.ok(!login.data.user.password);
   const oldCookie=cookie;
   assert.equal((await request({action:'profile',nickname:'여행자',gender:'female',age:0})).code,400);
   assert.equal((await request({action:'profile',nickname:'여행자',gender:'female',age:25})).code,200);
@@ -25,8 +29,8 @@ test('account lifecycle: signup, login, profile, reset, session revocation and s
   assert.equal((await request({action:'reset',token:resetToken,password:'newsecret123',confirmPassword:'newsecret123'})).code,200);
   cookie=oldCookie;assert.equal((await request({},'GET')).data.user,null);
   assert.equal((await request({action:'reset',token:resetToken,password:'othersecret',confirmPassword:'othersecret'})).code,400);
-  assert.equal((await request({action:'login',email:signup.email,password:'secret123'})).code,401);
-  assert.equal((await request({action:'login',email:signup.email,password:'newsecret123'})).code,200);
+  assert.equal((await request({action:'login',name:signup.name,password:'secret123'})).code,401);
+  assert.equal((await request({action:'login',name:signup.name,password:'newsecret123'})).code,200);
   assert.equal((await request({action:'logout'})).code,200);assert.equal((await request({},'GET')).data.user,null);
   process.env.VERCEL='1';assert.equal((await request({},'GET')).code,503);delete process.env.VERCEL;
  }finally{fs.rmSync(temp,{recursive:true,force:true});delete process.env.AUTH_DATA_DIR;}
