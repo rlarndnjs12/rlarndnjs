@@ -46,3 +46,15 @@ Overpass: https://wiki.openstreetmap.org/wiki/Overpass_API
 Vercel 공개 추천에는 공유 저장소가 필요합니다. Upstash Redis REST 환경변수 UPSTASH_REDIS_REST_URL과 UPSTASH_REDIS_REST_TOKEN을 서버 환경변수로 설정하세요. 무료 요금제의 현재 한도를 확인하세요. 키를 코드에 넣지 마세요. 공유 저장소가 있으면 24시간 결과 캐시와 원자적 전역 호출 제한을 사용합니다. 공유 저장소가 없거나 장애가 나면 공용 지도 API를 호출하지 않습니다. 추천을 사용할 수 없을 때도 외부 지도 검색 버튼을 제공합니다. 로컬 단일 서버는 기존 메모리 캐시를 사용할 수 있습니다.
 
 배포 검증: /, /hotels.html, /restaurants.html, /assets/app.js가 정상 응답하는지 확인하세요. /api/recommendations?destination=부산역&category=hotel은 저장소가 없으면 안내 JSON(503)을, 설정된 경우 장소 결과 또는 외부 API 오류를 반환합니다.
+
+
+## 회원가입·로그인·비밀번호 재설정
+
+- 이름(예: 홍길동), 이메일, 비밀번호(8~128자), 비밀번호 확인으로 가입한 후 로그인 화면으로 이동합니다.
+- 로그인 후 프로필이 없으면 닉네임(2~20자), 성별, 나이(1~120세)를 입력합니다. 로그인하지 않으면 여행 페이지 대신 로그인 화면으로 이동합니다.
+- 비밀번호는 salt + scrypt 해시로만 저장합니다. 세션은 무작위 토큰의 해시를 저장하고 브라우저에는 HttpOnly / SameSite=Lax 쿠키를 발급합니다. Vercel에서는 Secure를 적용합니다. 세션은 7일입니다.
+- 로컬 단일 서버는 Git에서 제외한 .data/auth.json에 계정을 보관합니다. Vercel은 UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN이 없으면 계정 기능을 중단합니다. 기존 사이트 계정은 이 저장소에 없으므로 자동 이전되지 않습니다. 이전 인증 저장소 연동/데이터 이전은 별도 필요합니다.
+- 비밀번호 재설정에는 RESEND_API_KEY, 인증된 발신 주소 AUTH_FROM_EMAIL, 사이트의 HTTPS 주소 AUTH_PUBLIC_URL이 필요합니다. 예: AUTH_PUBLIC_URL=https://trip-mate-kappa-seven.vercel.app. Vercel 서버 환경변수에만 등록하세요.
+- 이메일은 Resend API로 전송합니다. 재설정 토큰은 해시로 저장되고 30분 후 만료되며 한 번만 사용 가능합니다. 링크의 토큰은 URL fragment로 전달하고 재설정 페이지에서 즉시 주소창에서 지웁니다. 변경 시 기존 세션을 모두 무효화합니다.
+- 로그인과 가입 요청, 비밀번호 재설정에 서버 호출 제한을 적용합니다. 재설정 요청 응답은 등록 여부를 직접 밝히지 않습니다. 이메일 소유 확인을 통한 신규 가입 인증은 아직 제공하지 않습니다.
+- 로컬 파일 저장은 단일 프로세스 개발용이며 여러 프로세스/공개 배포에는 사용하지 마세요. 계정 데이터를 public 폴더에 넣지 마세요.
