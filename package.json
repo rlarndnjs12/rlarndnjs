@@ -1,0 +1,13 @@
+{
+  "name": "trip-mate",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/recommendations.test.js",
+    "build": "node scripts/build.js"
+  }
+}

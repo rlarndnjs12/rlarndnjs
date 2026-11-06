@@ -1,0 +1,18 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const originalFetch=global.fetch;
+function fresh(){delete require.cache[require.resolve('../api/recommendations')];return require('../api/recommendations')}
+async function call(handler,query={destination:'부산역',category:'hotel'},method='GET'){
+ const res={headers:{},setHeader(k,v){this.headers[k]=v},status(s){this.code=s;return this},json(data){this.data=data;return this}};
+ await handler({method,query},res);return res;
+}
+function mock(){let calls=0;global.fetch=async(url,options)=>{calls++;assert.ok(options.headers['User-Agent'].includes('TripMate'));if(String(url).includes('nominatim'))return {ok:true,json:async()=>[{lat:'35.1',lon:'129.0',display_name:'부산역, 부산'}]};assert.ok(new URLSearchParams(options.body).get('data').includes('["tourism"="hotel"]'));return {ok:true,json:async()=>({elements:[{type:'node',id:2,lat:35.12,lon:129,tags:{name:'먼 호텔'}},{type:'way',id:1,center:{lat:35.101,lon:129},tags:{'name:ko':'가까운 호텔'}},{type:'node',id:3,lat:35.101,lon:129,tags:{name:'가까운 호텔'}},{type:'node',id:4,lat:35.1,lon:129,tags:{}}]})}};return ()=>calls}
+test('validation and method rejection do not call provider',async()=>{global.fetch=()=>{throw Error('unexpected fetch')};const h=fresh();assert.equal((await call(h,{},'POST')).code,405);for(const category of ['invalid','__proto__','constructor'])assert.equal((await call(h,{destination:'부산',category})).code,400);assert.equal((await call(h,{destination:' ',category:'hotel'})).code,400)});
+test('geocoding, distance sorting, deduplication, result cache and burst control',async()=>{const count=mock(),h=fresh();const first=await call(h);assert.equal(first.code,200);assert.equal(first.data.places.length,2);assert.equal(first.data.places[0].name,'가까운 호텔');assert.ok(first.data.places[0].distance<first.data.places[1].distance);assert.equal(first.data.provider,'OpenStreetMap');assert.equal((await call(h)).code,200);assert.equal(count(),2);assert.equal((await call(h,{destination:'부산역',category:'cafe'})).code,429);assert.equal((await call(h,{destination:'서울역',category:'hotel'})).code,429)});
+test('duplicate concurrent searches share provider calls',async()=>{const count=mock(),h=fresh();const responses=await Promise.all([call(h),call(h)]);assert.ok(responses.every(r=>r.code===200));assert.equal(count(),2)});
+test('unknown destination reports 404',async()=>{global.fetch=async()=>({ok:true,json:async()=>[]});assert.equal((await call(fresh())).code,404)});
+test('upstream throttling reports retry guidance',async()=>{global.fetch=async()=>({ok:false,status:429});const r=await call(fresh());assert.equal(r.code,429);assert.equal(r.headers['Retry-After'],'3')});
+test('network failures do not expose internal errors',async()=>{global.fetch=async()=>{throw Error('private internal message')};const r=await call(fresh());assert.equal(r.code,502);assert.ok(!JSON.stringify(r.data).includes('private'))});
+test('invalid coordinates and partial Overpass results are rejected',async()=>{global.fetch=async()=>({ok:true,json:async()=>[{lat:'NaN',lon:'129'}]});assert.equal((await call(fresh())).code,502);global.fetch=async url=>({ok:true,json:async()=>String(url).includes('nominatim')?[{lat:'35',lon:'129'}]:{elements:[],remark:'timeout'}});assert.equal((await call(fresh())).code,502)});
+test('empty complete results are a successful search',async()=>{global.fetch=async url=>({ok:true,json:async()=>String(url).includes('nominatim')?[{lat:'35',lon:'129'}]:{elements:[]}});const r=await call(fresh());assert.equal(r.code,200);assert.deepEqual(r.data.places,[])});
+process.on('exit',()=>global.fetch=originalFetch);

@@ -1,0 +1,5 @@
+.git
+.env*
+tests
+server.js
+README.md
