@@ -22,3 +22,5 @@ if(mode==='forgot'||mode==='reset'){
 }
 const privacy=document.createElement('p');privacy.className='note';privacy.textContent='현재 탭 전용 체험 계정입니다. 탭을 닫으면 정보가 사라지며, 브라우저의 탭 복원 기능은 임시 정보를 복구할 수 있습니다. 완전히 지우려면 아래 버튼을 이용하세요. 비밀번호는 해시로만 저장됩니다.';document.querySelector('.panel').append(privacy);
 if(mode!=='forgot'&&mode!=='reset'){const clear=document.createElement('button');clear.type='button';clear.className='button secondary';clear.textContent='이 탭의 임시 정보 삭제';clear.addEventListener('click',()=>{if(confirm('가입 정보와 프로필을 삭제할까요?')){window.TripMateAuth.clear();location.assign('signup.html')}});document.querySelector('.panel').append(clear);}
+
+const authMain=document.querySelector('.auth-main');const content=document.createElement('div');content.className='auth-content';while(authMain.firstChild)content.append(authMain.firstChild);const cover=document.createElement('aside');cover.className='auth-cover';cover.innerHTML='<div class="eyebrow">A LITTLE ESCAPE</div><h2>일상은 잠시,<br>여행은 지금.</h2><p>어디로 떠나든, 누구와 함께든.<br>설레는 첫걸음을 Trip Mate와 함께해요.</p><span class="cover-stamp" aria-hidden="true">READY TO DEPART</span>';authMain.append(cover,content);
