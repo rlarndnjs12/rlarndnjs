@@ -2,7 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const handler = require('./api/recommendations');
-const files = new Set(['index.html','transport.html','assets/trip.js','hotels.html','restaurants.html','assets/map-links.js','assets/app.js','assets/style.css','assets/browser-auth.js','assets/auth.js','assets/session.js','login.html','signup.html','forgot-password.html','reset-password.html','profile.html']);
+const files = new Set(['index.html','budget.html','assets/budget.js','transport.html','assets/trip.js','hotels.html','restaurants.html','assets/map-links.js','assets/app.js','assets/style.css','assets/browser-auth.js','assets/auth.js','assets/session.js','login.html','signup.html','forgot-password.html','reset-password.html','profile.html']);
 http.createServer(async (req,res)=>{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname==='/api/recommendations') {
