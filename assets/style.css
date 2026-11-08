@@ -223,3 +223,13 @@ footer{border-top-color:#e0e9f4;color:#8092a8}
   color: #16476f;
   border-top-color: rgba(24,91,145,.2);
 }
+
+
+/* Make the 01 / 02 / 03 itinerary numbers easier to read */
+.cover-itinerary span {
+  width: 42px;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: .04em;
+  color: #0b5796;
+}
