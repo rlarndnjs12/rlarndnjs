@@ -177,3 +177,49 @@ footer{border-top-color:#e0e9f4;color:#8092a8}
     margin-left: -10px;
   }
 }
+
+
+/* Light sky-blue patterned login cover */
+.auth-cover {
+  background-color: #cfeaff;
+  background-image:
+    radial-gradient(ellipse at 82% 17%, rgba(255,255,255,.9) 0 8%, transparent 8.5%),
+    radial-gradient(ellipse at 92% 22%, rgba(255,255,255,.72) 0 10%, transparent 10.5%),
+    radial-gradient(ellipse at 75% 25%, rgba(255,255,255,.72) 0 7%, transparent 7.5%),
+    linear-gradient(145deg, #e5f5ff 0%, #b9e1ff 52%, #91caff 100%);
+}
+
+.auth-cover:before {
+  background:
+    radial-gradient(circle, rgba(27,103,181,.14) 1.4px, transparent 1.8px) 0 0 / 22px 22px,
+    repeating-linear-gradient(135deg, transparent 0 26px, rgba(255,255,255,.24) 27px 29px, transparent 30px 54px),
+    linear-gradient(180deg, rgba(255,255,255,.08), rgba(36,119,196,.1));
+}
+
+.auth-cover:after {
+  border-color: rgba(30,116,192,.26);
+  box-shadow: 0 0 0 24px rgba(255,255,255,.18), 0 0 0 55px rgba(255,255,255,.12);
+}
+
+.auth-cover .eyebrow,
+.cover-itinerary span {
+  color: #1764a5;
+}
+
+.auth-cover h2 {
+  color: #103d68;
+  background: rgba(255,255,255,.78);
+  text-shadow: none;
+  box-shadow: 0 8px 24px rgba(35,101,157,.12);
+}
+
+.auth-cover > p {
+  color: #174a76;
+  background: rgba(255,255,255,.72);
+  text-shadow: none;
+}
+
+.cover-itinerary li {
+  color: #16476f;
+  border-top-color: rgba(24,91,145,.2);
+}
