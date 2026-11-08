@@ -233,3 +233,36 @@ footer{border-top-color:#e0e9f4;color:#8092a8}
   letter-spacing: .04em;
   color: #0b5796;
 }
+
+
+/* Clear visual cues for transport, accommodation, and dining cards */
+.card-illustration {
+  position: relative;
+  align-self: stretch;
+  width: calc(100% + 48px);
+  height: 150px;
+  margin: -27px -24px 22px;
+  overflow: hidden;
+  border-radius: 15px 15px 0 0;
+  background: #e8f3ff;
+}
+.card-illustration img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.card-illustration span {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 15px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 4px 14px rgba(12,44,78,.16);
+  font-size: 28px;
+}
